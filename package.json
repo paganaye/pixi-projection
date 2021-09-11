@@ -36,7 +36,8 @@
 		"postversion": "run-s build:prod",
 		"postpublish": "git push && git push --tags",
 		"prepack": "clean-package",
-		"postpack": "clean-package restore"
+		"postpack": "clean-package restore",
+		"dev server": "reload -b"
 	},
 	"publishConfig": {
 		"access": "public"
