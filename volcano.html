@@ -23,22 +23,24 @@
 
 <body>
     <h1>Sample page</h1>
-    <p>Run the npm scripts 'watch' and 'dev server'.</p>
+    <canvas id="canvas1"></canvas>
+    <p>In order to see this demo and live code changes, run the two npm scripts 'watch' and 'dev server'.</p>
+    <p>There is another page if you want to <a href="showing-matrix.html">Understand the Matrix2d</a></p>
     <script>
         main();
 
         function main() {
             const rootContainerAxisY = {
                 x: 0,
-                y: 1000
+                y: 600
             };
 
             const app = new PIXI.Application({
                 backgroundColor: 0x103322,
                 width: 800,
-                height: 600
+                height: 600,
+                view: document.getElementById("canvas1")
             });
-            document.body.appendChild(app.view);
 
             // Root container is fixed in the middle at the bottom of the app screen
             // I see it a bit as a 2D camera
@@ -50,7 +52,7 @@
             // when repositionned or scalled all the content will follow
             const main2dContainer = new PIXI.projection.Container2d();
             main2dContainer.scale.set(4, 4);
-            main2dContainer.position.set(-1500, 0)
+            main2dContainer.position.set(-1500, 160)
             root2dContainer.addChild(main2dContainer);
 
             let floorTextures = loadFloorTextures();
@@ -58,7 +60,7 @@
 
             let characterTextures = loadCharacterTextures();
             character = main2dContainer.addChild(createCharacter(characterTextures));
-            character.position.set(336, -16);
+            character.position.set(350, -90);
 
             setupTweakPanel(main2dContainer, rootContainerAxisY);
 
@@ -101,22 +103,34 @@
             return floorTextures;
         }
 
+        function getElevation(x, y) {
+            x -= 16;
+            y -= 16;
+            let radius = (x * x + y * y) / 55;
+
+            return Math.max(0, radius >= Math.PI ? 0 : Math.sin(radius) + 1);
+        }
+
         function createFloorSprites(floorTextures) {
             let container = new PIXI.projection.Container2d();
-            for (let y = 0; y < 32; y++) {
+            const hillSize = 75;
+            for (let y = 31; y > 0; y--) {
                 for (let x = 0; x < 32; x++) {
-                    let tileColor =
-                        6 +
-                        Math.round(
-                            Math.sqrt(Math.pow(x - 15, 2) + Math.pow(y - 15, 2))
-                        );
+                    let tileColor = Math.round(getElevation(x, y) * 15);
                     const floor = new PIXI.projection.Sprite2d(
                         floorTextures[tileColor % floorTextures.length]
                     );
+                    floor.tag = x + "x" + y;
                     floor.anchor.set(0.5, 0.5);
                     floor.position.set(x * 32 + 0.5, -y * 32 + 0.5);
+                    floor.elevations = {
+                        topLeft: getElevation(x, y + 1) * hillSize,
+                        topRight: getElevation(x + 1, y + 1) * hillSize,
+                        bottomLeft: getElevation(x, y) * hillSize,
+                        bottomRight: getElevation(x + 1, y) * hillSize
+                    };
                     floor.interactive = true;
-                    const selectedTint = 0xFF8080;
+                    const selectedTint = 0x8080F0;
                     const whiteTint = 0xFFFFFF;
                     floor.on("pointerdown", (e) => {
                         // here we get the tile position using two different techniques
@@ -126,7 +140,9 @@
                         let expectedTile = { x: containerPoint.x >> 5, y: (-containerPoint.y) >> 5 };
                         console.log({ screenPoint, containerPoint, expectedTile, actual: { x, y } });
                         floor.tint = floor.tint === selectedTint ? whiteTint : selectedTint;
-                        floor.rotation += Math.PI / 2;
+                        //floor.rotation += Math.PI / 2;
+                        console.log("clicked ", floor.tag);
+                        return true;
                     });
                     container.addChild(floor);
                 }
@@ -172,17 +188,19 @@
         }
 
         function setupTweakPanel(main2dContainer, rootContainerAxisY) {
-            const mainMane = new Tweakpane.Pane();
-            let pane = mainMane.addFolder({ title: "root container axis" });
+            const mainPane = new Tweakpane.Pane();
+            let pane = mainPane.addFolder({ title: "root container axis" });
             pane.addInput(rootContainerAxisY, "x", { min: -10_000, max: 10_000 });
             pane.addInput(rootContainerAxisY, "y", { min: 0, max: 5_000 });
-            pane = mainMane.addFolder({ title: "main container position" });
+            pane = mainPane.addFolder({ title: "main container position" });
             pane.addInput(main2dContainer.position, "x", { min: -4096, max: 0 });
             pane.addInput(main2dContainer.position, "y", { min: -16, max: 4096 });
-            pane = mainMane.addFolder({ title: "main container scale" });
-            pane.addInput(main2dContainer.scale, "x", { min: 0.1, max: 20 });
-            pane.addInput(main2dContainer.scale, "y", { min: 0.1, max: 20 });
-            pane = mainMane.addFolder({ title: "Character position" });
+            const mainContainerUtil = {
+                get scale() { return main2dContainer.scale.x; },
+                set scale(value) { main2dContainer.scale.set(value); }
+            }
+            pane.addInput(mainContainerUtil, "scale", { min: 0.1, max: 20 });
+            pane = mainPane.addFolder({ title: "Character position" });
             pane.addInput(character.position, "x", { min: -1000, max: 1000 });
             pane.addInput(character.position, "y", { min: -1000, max: 0 });
         }

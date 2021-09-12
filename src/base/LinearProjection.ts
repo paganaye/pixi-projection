@@ -45,6 +45,7 @@ export function transformHack(this: Transform, parentTransform: Transform): void
 
             lt.tx = ta.position._x - ((ta.pivot._x * lt.a) + (ta.pivot._y * lt.c));
             lt.ty = ta.position._y - ((ta.pivot._x * lt.b) + (ta.pivot._y * lt.d));
+            lt.tz = ta._z;
         }
 
         ta._currentLocalID = ta._localID;

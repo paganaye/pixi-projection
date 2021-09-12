@@ -402,8 +402,7 @@ export class Matrix2d
 
         const b00 = b[0]; const b01 = b[1]; const b02 = b[2];
         const b10 = b[3]; const b11 = b[4]; const b12 = b[5];
-        const b20 = b[6]; const b21 = b[7]; const
-            b22 = b[8];
+        const b20 = b[6]; const b21 = b[7]; const b22 = b[8];
 
         out[0] = b00 * a00 + b01 * a10 + b02 * a20;
         out[1] = b00 * a01 + b01 * a11 + b02 * a21;
@@ -462,8 +461,7 @@ export class Matrix2d
 
         const b00 = b[0]; const b01 = b[1]; const b02 = b[2];
         const b10 = b[3]; const b11 = b[4]; const b12 = b[5];
-        const b20 = b[6]; const b21 = b[7]; const
-            b22 = b[8];
+        const b20 = b[6]; const b21 = b[7]; const b22 = b[8];
 
         out[0] = b00 * a00 + b01 * a10 + b02 * a20;
         out[1] = b00 * a01 + b01 * a11 + b02 * a21;

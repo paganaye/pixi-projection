@@ -3,10 +3,8 @@ import { Texture, TextureMatrix } from '@pixi/core';
 import { Sprite } from '@pixi/sprite';
 import { ProjectionSurface } from '../ProjectionSurface';
 
-export class Sprite2s extends Sprite
-{
-    constructor(texture: Texture)
-    {
+export class Sprite2s extends Sprite {
+    constructor(texture: Texture) {
         super(texture);
         this.proj = new ProjectionSurface(this.transform);
         this.pluginName = 'batch_bilinear';
@@ -15,20 +13,17 @@ export class Sprite2s extends Sprite
     proj: ProjectionSurface;
     aTrans = new Matrix();
 
-    _calculateBounds(): void
-    {
+    _calculateBounds(): void {
         this.calculateTrimmedVertices();
         this._bounds.addQuad((this as any).vertexTrimmedData as any);
     }
 
-    calculateVertices(): void
-    {
+    calculateVertices(): void {
         const wid = (this.transform as any)._worldID;
         const tuid = (this._texture as any)._updateID;
         const thisAny = this as any;
 
-        if (thisAny._transformID === wid && this._textureID === tuid)
-        {
+        if (thisAny._transformID === wid && this._textureID === tuid) {
             return;
         }
 
@@ -46,16 +41,14 @@ export class Sprite2s extends Sprite
         let h0: number;
         let h1: number;
 
-        if (trim)
-        {
+        if (trim) {
             w1 = trim.x - (anchor._x * orig.width);
             w0 = w1 + trim.width;
 
             h1 = trim.y - (anchor._y * orig.height);
             h0 = h1 + trim.height;
         }
-        else
-        {
+        else {
             w1 = -anchor._x * orig.width;
             w0 = w1 + orig.width;
 
@@ -63,8 +56,7 @@ export class Sprite2s extends Sprite
             h0 = h1 + orig.height;
         }
 
-        if (this.proj._surface)
-        {
+        if (this.proj._surface) {
             vertexData[0] = w1;
             vertexData[1] = h1;
             vertexData[2] = w0;
@@ -75,8 +67,7 @@ export class Sprite2s extends Sprite
             vertexData[7] = h0;
             this.proj._surface.boundsQuad(vertexData, vertexData);
         }
-        else
-        {
+        else {
             const wt = this.transform.worldTransform;
             const a = wt.a;
             const b = wt.b;
@@ -84,23 +75,22 @@ export class Sprite2s extends Sprite
             const d = wt.d;
             const tx = wt.tx;
             const ty = wt.ty;
+            const tz = (wt as any).tz;
 
             vertexData[0] = (a * w1) + (c * h1) + tx;
-            vertexData[1] = (d * h1) + (b * w1) + ty;
+            vertexData[1] = (d * h1) + (b * w1) + ty + tz;
             vertexData[2] = (a * w0) + (c * h1) + tx;
-            vertexData[3] = (d * h1) + (b * w0) + ty;
+            vertexData[3] = (d * h1) + (b * w0) + ty + tz;
             vertexData[4] = (a * w0) + (c * h0) + tx;
-            vertexData[5] = (d * h0) + (b * w0) + ty;
+            vertexData[5] = (d * h0) + (b * w0) + ty + tz;
             vertexData[6] = (a * w1) + (c * h0) + tx;
             vertexData[7] = (d * h0) + (b * w1) + ty;
-            if (this.proj._activeProjection)
-            {
+            if (this.proj._activeProjection) {
                 this.proj._activeProjection.surface.boundsQuad(vertexData, vertexData);
             }
         }
 
-        if (!texture.uvMatrix)
-        {
+        if (!texture.uvMatrix) {
             texture.uvMatrix = new TextureMatrix(texture);
         }
         texture.uvMatrix.update();
@@ -108,26 +98,22 @@ export class Sprite2s extends Sprite
         const aTrans = this.aTrans;
 
         aTrans.set(orig.width, 0, 0, orig.height, w1, h1);
-        if (this.proj._surface === null)
-        {
+        if (this.proj._surface === null) {
             aTrans.prepend(this.transform.worldTransform);
         }
         aTrans.invert();
         aTrans.prepend((texture.uvMatrix as any).mapCoord);
     }
 
-    calculateTrimmedVertices(): void
-    {
+    calculateTrimmedVertices(): void {
         const wid = (this.transform as any)._worldID;
         const tuid = (this._texture as any)._updateID;
         const thisAny = this as any;
 
-        if (!thisAny.vertexTrimmedData)
-        {
+        if (!thisAny.vertexTrimmedData) {
             thisAny.vertexTrimmedData = new Float32Array(8);
         }
-        else if (thisAny._transformTrimmedID === wid && this._textureTrimmedID === tuid)
-        {
+        else if (thisAny._transformTrimmedID === wid && this._textureTrimmedID === tuid) {
             return;
         }
 
@@ -150,8 +136,7 @@ export class Sprite2s extends Sprite
 
         // TODO: take rotations into account! form temporary bounds
 
-        if (this.proj._surface)
-        {
+        if (this.proj._surface) {
             vertexData[0] = w1;
             vertexData[1] = h1;
             vertexData[2] = w0;
@@ -162,8 +147,7 @@ export class Sprite2s extends Sprite
             vertexData[7] = h0;
             this.proj._surface.boundsQuad(vertexData, vertexData, this.transform.worldTransform);
         }
-        else
-        {
+        else {
             const wt = this.transform.worldTransform;
             const a = wt.a;
             const b = wt.b;
@@ -180,16 +164,14 @@ export class Sprite2s extends Sprite
             vertexData[5] = (d * h0) + (b * w0) + ty;
             vertexData[6] = (a * w1) + (c * h0) + tx;
             vertexData[7] = (d * h0) + (b * w1) + ty;
-            if (this.proj._activeProjection)
-            {
+            if (this.proj._activeProjection) {
                 this.proj._activeProjection.surface.boundsQuad(vertexData, vertexData,
                     this.proj._activeProjection.legacy.worldTransform);
             }
         }
     }
 
-    get worldTransform(): Matrix
-    {
+    get worldTransform(): Matrix {
         return this.proj as any;
     }
 }
