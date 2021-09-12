@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src='https://d157l7jdn8e5sf.cloudfront.net/dev/pixi-legacy.js'></script>
+    <script src='../dist/pixi-projection.umd.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/tweakpane@3.0.5/dist/tweakpane.min.js"></script>
+    <style>
+        body {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+
+        var {
+            color: orange;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Understanding the Matrix3d</h1>
+    <canvas id="canvas1"></canvas>
+    <p>In order to see this demo and live code changes, run the two npm scripts 'watch' and 'dev server'.</p>
+    <p>Here I was surprised to see that changing the sprite matrix has an impact on the sprite world matrix. I was sort
+        of expecting the opposite.</p>
+    <p>It appears after investigation that:</p>
+    <pre><var>world_matrix</var> = <var>parent.world_matrix</var> x <var>local_matrix</var>
+</pre>
+    <p>In my project I need elevated floor tiles. Apparently I could do it by tweaking the entry 7 in the world matrix.
+    </p>
+    <script>
+        main();
+
+        function main() {
+            var canvas1 = document.getElementById("canvas1");
+
+            const app = new PIXI.Application({
+                backgroundColor: 0x103322,
+                width: 800,
+                height: 600,
+                view: canvas1
+            });
+
+            const rootContainerAxisY = {
+                x: 0,
+                y: 1000
+            };
+
+            const camera = new PIXI.projection.Camera3d();
+            camera.position.set(app.screen.width / 2, app.screen.height);
+            app.stage.addChild(camera);
+
+            const main3dContainer = new PIXI.projection.Container3d();
+            main3dContainer.scale.set(4, 4);
+            main3dContainer.position.set(0, -256)
+            camera.addChild(main3dContainer);
+
+            let floorTextures = loadFloorTextures();
+            let sprite = main3dContainer.addChild(createFloorSprite(floorTextures));
+            sprite.position.z = 0;
+
+            setTimeout(() => {
+                sprite.position.x += 10;
+            }, 500);
+
+            let tweakPanel = setupTweakPanel(main3dContainer, rootContainerAxisY, sprite);
+
+            // main loop
+            let time = 0;
+            let lastRootContainerAxisY = {};
+
+            app.ticker.add((delta) => {
+                time += delta;
+                sprite.transform.onChange();
+                tweakPanel.refresh();
+            });
+        }
+
+        function loadFloorTextures() {
+            const fullFloorTexture = PIXI.Texture.from(
+                "https://friends.ganaye.com/assets/pipoya/tiles/%5bP%5dFloors.png"
+            );
+            fullFloorTexture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+            const floorTextures = [];
+            for (let y = 0; y < 5; y++) {
+                for (let x = 0; x < 6; x++) {
+                    floorTextures.push(
+                        new PIXI.Texture(
+                            fullFloorTexture,
+                            new PIXI.Rectangle(x << 5, y << 5, 32, 32)
+                        )
+                    );
+                }
+            }
+            return floorTextures;
+        }
+
+        function createFloorSprite(floorTextures) {
+            const floor = new PIXI.projection.Sprite3d(
+                floorTextures[1]
+            );
+            floor.anchor.set(0.5, 0.5);
+            floor.position.set(0.5, 0.5);
+            floor.interactive = true;
+            return floor;
+        }
+
+
+        function setupTweakPanel(main3dContainer, rootContainerAxisY, sprite) {
+
+            let spriteHelper = {
+                get m0() { return sprite.proj.matrix.mat3[0]; }, set m0(v) { sprite.proj.matrix.mat3[0] = v; sprite.proj._projID++; },
+                get m1() { return sprite.proj.matrix.mat3[1]; }, set m1(v) { sprite.proj.matrix.mat3[1] = v; sprite.proj._projID++; },
+                get m2() { return sprite.proj.matrix.mat3[2]; }, set m2(v) { sprite.proj.matrix.mat3[2] = v; sprite.proj._projID++; },
+                get m3() { return sprite.proj.matrix.mat3[3]; }, set m3(v) { sprite.proj.matrix.mat3[3] = v; sprite.proj._projID++; },
+                get m4() { return sprite.proj.matrix.mat3[4]; }, set m4(v) { sprite.proj.matrix.mat3[4] = v; sprite.proj._projID++; },
+                get m5() { return sprite.proj.matrix.mat3[5]; }, set m5(v) { sprite.proj.matrix.mat3[5] = v; sprite.proj._projID++; },
+                get m6() { return sprite.proj.matrix.mat3[6]; }, set m6(v) { sprite.proj.matrix.mat3[6] = v; sprite.proj._projID++; },
+                get m7() { return sprite.proj.matrix.mat3[7]; }, set m7(v) { sprite.proj.matrix.mat3[7] = v; sprite.proj._projID++; },
+                get m8() { return sprite.proj.matrix.mat3[8]; }, set m8(v) { sprite.proj.matrix.mat3[8] = v; sprite.proj._projID++; },
+
+                get w0() { return sprite.proj.world.mat3[0]; }, set w0(v) { sprite.proj.world.mat3[0] = v; sprite._transformID = -1; },
+                get w1() { return sprite.proj.world.mat3[1]; }, set w1(v) { sprite.proj.world.mat3[1] = v; sprite._transformID = -1; },
+                get w2() { return sprite.proj.world.mat3[2]; }, set w2(v) { sprite.proj.world.mat3[2] = v; sprite._transformID = -1; },
+                get w3() { return sprite.proj.world.mat3[3]; }, set w3(v) { sprite.proj.world.mat3[3] = v; sprite._transformID = -1; },
+                get w4() { return sprite.proj.world.mat3[4]; }, set w4(v) { sprite.proj.world.mat3[4] = v; sprite._transformID = -1; },
+                get w5() { return sprite.proj.world.mat3[5]; }, set w5(v) { sprite.proj.world.mat3[5] = v; sprite._transformID = -1; },
+                get w6() { return sprite.proj.world.mat3[6]; }, set w6(v) { sprite.proj.world.mat3[6] = v; sprite._transformID = -1; },
+                get w7() { return sprite.proj.world.mat3[7]; }, set w7(v) { sprite.proj.world.mat3[7] = v; sprite._transformID = -1; },
+                get w8() { return sprite.proj.world.mat3[8]; }, set w8(v) { sprite.proj.world.mat3[8] = v; sprite._transformID = -1; }
+            }
+
+            const mainPane = new Tweakpane.Pane();
+            let pane = mainPane.addFolder({ title: "root container axis", expanded: false });
+            pane.addInput(rootContainerAxisY, "x", { min: -10_000, max: 10_000 });
+            pane.addInput(rootContainerAxisY, "y", { min: 0, max: 5_000 });
+            pane = mainPane.addFolder({ title: "main container position", expanded: false });
+            pane.addInput(main3dContainer.position, "x", { min: -256, max: 256 });
+            pane.addInput(main3dContainer.position, "y", { min: -1000, max: 100 });
+            pane = mainPane.addFolder({ title: "main container scale" });
+            pane.addInput(main3dContainer.scale, "x", { min: 0.1, max: 20 });
+            pane.addInput(main3dContainer.scale, "y", { min: 0.1, max: 20 });
+            pane = mainPane.addFolder({ title: "sprite position" });
+            pane.addInput(sprite.position, "x", { min: -100, max: 100 });
+            pane.addInput(sprite.position, "y", { min: -100, max: 100 });
+            pane = mainPane.addFolder({ title: "sprite scale and angle" });
+            pane.addInput(sprite.scale, "x", { min: 0.2, max: 10 });
+            pane.addInput(sprite.scale, "y", { min: 0.2, max: 10 });
+            pane.addInput(sprite, "angle", { min: 0, max: 360 });
+            pane = mainPane.addFolder({ title: "sprite matrix 3d", expanded: false });
+            // pane.addInput(spriteHelper, "m0", { step: 0.1, label: "m0 scalex", step: 0.1 });
+            // pane.addInput(spriteHelper, "m1", { step: 0.1, label: "m1 skewy", step: 0.1 });
+            // pane.addInput(spriteHelper, "m2", { step: 0.01, label: "m2 rolly", step: 0.01 });
+            // pane.addInput(spriteHelper, "m3", { step: 0.1, label: "m3 skewx", step: 0.1 });
+            // pane.addInput(spriteHelper, "m4", { step: 0.1, label: "m4 scaley", step: 0.1 });
+            // pane.addInput(spriteHelper, "m5", { step: 0.01, label: "m5 rollz", step: 0.01 });
+            // pane.addInput(spriteHelper, "m6", { step: 0.1, label: "m6 tx", step: 10 });
+            // pane.addInput(spriteHelper, "m7", { step: 0.1, label: "m7 ty", step: 10 });
+            // pane.addInput(spriteHelper, "m8", { step: 0.1, label: "m8 tz", step: 0.1 });
+            pane = mainPane.addFolder({ title: "sprite world matrix 3d" });
+            // pane.addInput(spriteHelper, "w0", { step: 0.1, label: "m0 scalex", step: 0.1 });
+            // pane.addInput(spriteHelper, "w1", { step: 0.1, label: "m1 skewy", step: 0.1 });
+            // pane.addInput(spriteHelper, "w2", { step: 0.01, label: "m2 rolly", step: 0.01 });
+            // pane.addInput(spriteHelper, "w3", { step: 0.1, label: "m3 skewx", step: 0.1 });
+            // pane.addInput(spriteHelper, "w4", { step: 0.1, label: "m4 scaley", step: 0.1 });
+            // pane.addInput(spriteHelper, "w5", { step: 0.01, label: "m5 rollz", step: 0.01 });
+            // pane.addInput(spriteHelper, "w6", { step: 0.1, label: "m6 tx", step: 10 });
+            // pane.addInput(spriteHelper, "w7", { step: 0.1, label: "m7 ty", step: 10 });
+            // pane.addInput(spriteHelper, "w8", { step: 0.1, label: "m8 tz", step: 0.1 });
+            return mainPane;
+        }
+
+    </script>
+    <p>Back to <a href="..">main demo</a></p>
+</body>
+
+</html>
