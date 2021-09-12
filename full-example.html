@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <!-- <link rel='stylesheet' type='text/css' media='screen' href='main.css'> -->
+    <!-- <script src='main.js'></script> -->
+    <!-- 
+    script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.1.2/cjs/pixi.min.js" integrity="sha512-qi0mbhuKsF2HZfNzaasN1rthff2ekYNzbpBf/7o2jeFfGos2bYvPzgdC7GRF4b0erXOYu4eWW+/izwieghUyFw==" crossorigin="anonymous" referrerpolicy="no-referrer"
+    script src="dirst/pixi-projection.js" -->
+    <script src='https://d157l7jdn8e5sf.cloudfront.net/dev/pixi-legacy.js'></script>
+    <script src='dist/pixi-projection.umd.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/tweakpane@3.0.5/dist/tweakpane.min.js"></script>
+    <style>
+        body {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Sample page</h1>
+    <p>Run the npm scripts 'watch' and 'dev server'.</p>
+    <script>
+        main();
+
+        function main() {
+            const rootContainerAxisY = {
+                x: 0,
+                y: 1000
+            };
+
+            const app = new PIXI.Application({
+                backgroundColor: 0x103322,
+                width: 800,
+                height: 600
+            });
+            document.body.appendChild(app.view);
+
+            // Root container is fixed in the middle at the bottom of the app screen
+            // I see it a bit as a 2D camera
+            const root2dContainer = new PIXI.projection.Container2d();
+            root2dContainer.position.set(app.screen.width / 2, app.screen.height);
+            app.stage.addChild(root2dContainer);
+
+            // main container contains the floor and character, so that
+            // when repositionned or scalled all the content will follow
+            const main2dContainer = new PIXI.projection.Container2d();
+            main2dContainer.scale.set(4, 4);
+            main2dContainer.position.set(-1500, 0)
+            root2dContainer.addChild(main2dContainer);
+
+            let floorTextures = loadFloorTextures();
+            main2dContainer.addChild(createFloorSprites(floorTextures));
+
+            let characterTextures = loadCharacterTextures();
+            character = main2dContainer.addChild(createCharacter(characterTextures));
+            character.position.set(336, -16);
+
+            setupTweakPanel(main2dContainer, rootContainerAxisY);
+
+            // main loop
+            let time = 0;
+            let lastRootContainerAxisY = {};
+
+            app.ticker.add((delta) => {
+                time += delta;
+                if (
+                    rootContainerAxisY.x != lastRootContainerAxisY.x ||
+                    rootContainerAxisY.y != lastRootContainerAxisY.y
+                ) {
+                    root2dContainer.proj.setAxisY(rootContainerAxisY, -1);
+                    lastRootContainerAxisY = {
+                        x: rootContainerAxisY.x,
+                        y: rootContainerAxisY.y
+                    };
+                }
+                character.texture = characterTextures[(time >> 3) % 3];
+            });
+        }
+
+        function loadFloorTextures() {
+            const fullFloorTexture = PIXI.Texture.from(
+                "https://friends.ganaye.com/assets/pipoya/tiles/%5bP%5dFloors.png"
+            );
+            fullFloorTexture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+            const floorTextures = [];
+            for (let y = 0; y < 5; y++) {
+                for (let x = 0; x < 6; x++) {
+                    floorTextures.push(
+                        new PIXI.Texture(
+                            fullFloorTexture,
+                            new PIXI.Rectangle(x << 5, y << 5, 32, 32)
+                        )
+                    );
+                }
+            }
+            return floorTextures;
+        }
+
+        function createFloorSprites(floorTextures) {
+            let container = new PIXI.projection.Container2d();
+            for (let y = 0; y < 32; y++) {
+                for (let x = 0; x < 32; x++) {
+                    let tileColor =
+                        6 +
+                        Math.round(
+                            Math.sqrt(Math.pow(x - 15, 2) + Math.pow(y - 15, 2))
+                        );
+                    const floor = new PIXI.projection.Sprite2d(
+                        floorTextures[tileColor % floorTextures.length]
+                    );
+                    floor.anchor.set(0.5, 0.5);
+                    floor.position.set(x * 32 + 0.5, -y * 32 + 0.5);
+                    floor.interactive = true;
+                    const selectedTint = 0xFF8080;
+                    const whiteTint = 0xFFFFFF;
+                    floor.on("pointerdown", (e) => {
+                        // here we get the tile position using two different techniques
+                        // the sprite knows its position but then we can calculated manually too
+                        let screenPoint = e.data.global;
+                        let containerPoint = container.worldTransform.applyInverse(screenPoint);
+                        let expectedTile = { x: containerPoint.x >> 5, y: (-containerPoint.y) >> 5 };
+                        console.log({ screenPoint, containerPoint, expectedTile, actual: { x, y } });
+                        floor.tint = floor.tint === selectedTint ? whiteTint : selectedTint;
+                        floor.rotation += Math.PI / 2;
+                    });
+                    container.addChild(floor);
+                }
+            }
+            return container;
+        }
+
+        function loadCharacterTextures() {
+            const fullCharacterTexture = PIXI.Texture.from(
+                "https://friends.ganaye.com/assets/pipoya/main-characters/Male%2016-2.png"
+            );
+            fullCharacterTexture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+            const characterTextures = [
+                new PIXI.Texture(
+                    fullCharacterTexture,
+                    new PIXI.Rectangle(0, 64, 32, 32)
+                ),
+                new PIXI.Texture(
+                    fullCharacterTexture,
+                    new PIXI.Rectangle(32, 64, 32, 32)
+                ),
+                new PIXI.Texture(
+                    fullCharacterTexture,
+                    new PIXI.Rectangle(64, 64, 32, 32)
+                ),
+                new PIXI.Texture(
+                    fullCharacterTexture,
+                    new PIXI.Rectangle(32, 64, 32, 32)
+                )
+            ];
+            return characterTextures;
+        }
+
+        function createCharacter(characterTextures) {
+            const character = new PIXI.projection.Sprite2d(
+                characterTextures[0],
+                new PIXI.Rectangle(0, 0, 32, 32)
+            );
+            character.anchor.set(0.5, 1.0);
+            character.proj.affine = PIXI.projection.AFFINE.AXIS_X;
+            character.position.y = -100;
+            return character;
+        }
+
+        function setupTweakPanel(main2dContainer, rootContainerAxisY) {
+            const mainMane = new Tweakpane.Pane();
+            let pane = mainMane.addFolder({ title: "root container axis" });
+            pane.addInput(rootContainerAxisY, "x", { min: -10_000, max: 10_000 });
+            pane.addInput(rootContainerAxisY, "y", { min: 0, max: 5_000 });
+            pane = mainMane.addFolder({ title: "main container position" });
+            pane.addInput(main2dContainer.position, "x", { min: -4096, max: 0 });
+            pane.addInput(main2dContainer.position, "y", { min: -16, max: 4096 });
+            pane = mainMane.addFolder({ title: "main container scale" });
+            pane.addInput(main2dContainer.scale, "x", { min: 0.1, max: 20 });
+            pane.addInput(main2dContainer.scale, "y", { min: 0.1, max: 20 });
+            pane = mainMane.addFolder({ title: "Character position" });
+            pane.addInput(character.position, "x", { min: -1000, max: 1000 });
+            pane.addInput(character.position, "y", { min: -1000, max: 0 });
+        }
+
+    </script>
+</body>
+
+</html>
