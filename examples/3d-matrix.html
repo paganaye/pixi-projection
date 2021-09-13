@@ -112,25 +112,22 @@
         function setupTweakPanel(main3dContainer, rootContainerAxisY, sprite) {
 
             let spriteHelper = {
-                get m0() { return sprite.proj.matrix.mat3[0]; }, set m0(v) { sprite.proj.matrix.mat3[0] = v; sprite.proj._projID++; },
-                get m1() { return sprite.proj.matrix.mat3[1]; }, set m1(v) { sprite.proj.matrix.mat3[1] = v; sprite.proj._projID++; },
-                get m2() { return sprite.proj.matrix.mat3[2]; }, set m2(v) { sprite.proj.matrix.mat3[2] = v; sprite.proj._projID++; },
-                get m3() { return sprite.proj.matrix.mat3[3]; }, set m3(v) { sprite.proj.matrix.mat3[3] = v; sprite.proj._projID++; },
-                get m4() { return sprite.proj.matrix.mat3[4]; }, set m4(v) { sprite.proj.matrix.mat3[4] = v; sprite.proj._projID++; },
-                get m5() { return sprite.proj.matrix.mat3[5]; }, set m5(v) { sprite.proj.matrix.mat3[5] = v; sprite.proj._projID++; },
-                get m6() { return sprite.proj.matrix.mat3[6]; }, set m6(v) { sprite.proj.matrix.mat3[6] = v; sprite.proj._projID++; },
-                get m7() { return sprite.proj.matrix.mat3[7]; }, set m7(v) { sprite.proj.matrix.mat3[7] = v; sprite.proj._projID++; },
-                get m8() { return sprite.proj.matrix.mat3[8]; }, set m8(v) { sprite.proj.matrix.mat3[8] = v; sprite.proj._projID++; },
-
-                get w0() { return sprite.proj.world.mat3[0]; }, set w0(v) { sprite.proj.world.mat3[0] = v; sprite._transformID = -1; },
-                get w1() { return sprite.proj.world.mat3[1]; }, set w1(v) { sprite.proj.world.mat3[1] = v; sprite._transformID = -1; },
-                get w2() { return sprite.proj.world.mat3[2]; }, set w2(v) { sprite.proj.world.mat3[2] = v; sprite._transformID = -1; },
-                get w3() { return sprite.proj.world.mat3[3]; }, set w3(v) { sprite.proj.world.mat3[3] = v; sprite._transformID = -1; },
-                get w4() { return sprite.proj.world.mat3[4]; }, set w4(v) { sprite.proj.world.mat3[4] = v; sprite._transformID = -1; },
-                get w5() { return sprite.proj.world.mat3[5]; }, set w5(v) { sprite.proj.world.mat3[5] = v; sprite._transformID = -1; },
-                get w6() { return sprite.proj.world.mat3[6]; }, set w6(v) { sprite.proj.world.mat3[6] = v; sprite._transformID = -1; },
-                get w7() { return sprite.proj.world.mat3[7]; }, set w7(v) { sprite.proj.world.mat3[7] = v; sprite._transformID = -1; },
-                get w8() { return sprite.proj.world.mat3[8]; }, set w8(v) { sprite.proj.world.mat3[8] = v; sprite._transformID = -1; }
+                get m0() { return sprite.proj.world.mat4[0]; }, set m0(v) { sprite.proj.world.mat4[0] = v; sprite.proj._projID++; },
+                get m1() { return sprite.proj.world.mat4[1]; }, set m1(v) { sprite.proj.world.mat4[1] = v; sprite.proj._projID++; },
+                get m2() { return sprite.proj.world.mat4[2]; }, set m2(v) { sprite.proj.world.mat4[2] = v; sprite.proj._projID++; },
+                get m3() { return sprite.proj.world.mat4[3]; }, set m3(v) { sprite.proj.world.mat4[3] = v; sprite.proj._projID++; },
+                get m4() { return sprite.proj.world.mat4[4]; }, set m4(v) { sprite.proj.world.mat4[4] = v; sprite.proj._projID++; },
+                get m5() { return sprite.proj.world.mat4[5]; }, set m5(v) { sprite.proj.world.mat4[5] = v; sprite.proj._projID++; },
+                get m6() { return sprite.proj.world.mat4[6]; }, set m6(v) { sprite.proj.world.mat4[6] = v; sprite.proj._projID++; },
+                get m7() { return sprite.proj.world.mat4[7]; }, set m7(v) { sprite.proj.world.mat4[7] = v; sprite.proj._projID++; },
+                get m8() { return sprite.proj.world.mat4[8]; }, set m8(v) { sprite.proj.world.mat4[8] = v; sprite.proj._projID++; },
+                get m9() { return sprite.proj.world.mat4[0]; }, set m9(v) { sprite.proj.world.mat4[9] = v; sprite.proj._projID++; },
+                get m10() { return sprite.proj.world.mat4[1]; }, set m10(v) { sprite.proj.world.mat4[10] = v; sprite.proj._projID++; },
+                get m11() { return sprite.proj.world.mat4[1]; }, set m11(v) { sprite.proj.world.mat4[11] = v; sprite.proj._projID++; },
+                get m12() { return sprite.proj.world.mat4[2]; }, set m12(v) { sprite.proj.world.mat4[12] = v; sprite.proj._projID++; },
+                get m13() { return sprite.proj.world.mat4[3]; }, set m13(v) { sprite.proj.world.mat4[13] = v; sprite.proj._projID++; },
+                get m14() { return sprite.proj.world.mat4[4]; }, set m14(v) { sprite.proj.world.mat4[14] = v; sprite.proj._projID++; },
+                get m15() { return sprite.proj.world.mat4[5]; }, set m15(v) { sprite.proj.world.mat4[15] = v; sprite.proj._projID++; },
             }
 
             const mainPane = new Tweakpane.Pane();
@@ -150,26 +147,23 @@
             pane.addInput(sprite.scale, "x", { min: 0.2, max: 10 });
             pane.addInput(sprite.scale, "y", { min: 0.2, max: 10 });
             pane.addInput(sprite, "angle", { min: 0, max: 360 });
-            pane = mainPane.addFolder({ title: "sprite matrix 3d", expanded: false });
-            // pane.addInput(spriteHelper, "m0", { step: 0.1, label: "m0 scalex", step: 0.1 });
-            // pane.addInput(spriteHelper, "m1", { step: 0.1, label: "m1 skewy", step: 0.1 });
-            // pane.addInput(spriteHelper, "m2", { step: 0.01, label: "m2 rolly", step: 0.01 });
-            // pane.addInput(spriteHelper, "m3", { step: 0.1, label: "m3 skewx", step: 0.1 });
-            // pane.addInput(spriteHelper, "m4", { step: 0.1, label: "m4 scaley", step: 0.1 });
-            // pane.addInput(spriteHelper, "m5", { step: 0.01, label: "m5 rollz", step: 0.01 });
-            // pane.addInput(spriteHelper, "m6", { step: 0.1, label: "m6 tx", step: 10 });
-            // pane.addInput(spriteHelper, "m7", { step: 0.1, label: "m7 ty", step: 10 });
-            // pane.addInput(spriteHelper, "m8", { step: 0.1, label: "m8 tz", step: 0.1 });
-            pane = mainPane.addFolder({ title: "sprite world matrix 3d" });
-            // pane.addInput(spriteHelper, "w0", { step: 0.1, label: "m0 scalex", step: 0.1 });
-            // pane.addInput(spriteHelper, "w1", { step: 0.1, label: "m1 skewy", step: 0.1 });
-            // pane.addInput(spriteHelper, "w2", { step: 0.01, label: "m2 rolly", step: 0.01 });
-            // pane.addInput(spriteHelper, "w3", { step: 0.1, label: "m3 skewx", step: 0.1 });
-            // pane.addInput(spriteHelper, "w4", { step: 0.1, label: "m4 scaley", step: 0.1 });
-            // pane.addInput(spriteHelper, "w5", { step: 0.01, label: "m5 rollz", step: 0.01 });
-            // pane.addInput(spriteHelper, "w6", { step: 0.1, label: "m6 tx", step: 10 });
-            // pane.addInput(spriteHelper, "w7", { step: 0.1, label: "m7 ty", step: 10 });
-            // pane.addInput(spriteHelper, "w8", { step: 0.1, label: "m8 tz", step: 0.1 });
+            pane = mainPane.addFolder({ title: "sprite matrix 3d", expanded: true });
+            pane.addInput(spriteHelper, "m0", { step: 0.1, label: "m0", step: 0.1 });
+            pane.addInput(spriteHelper, "m1", { step: 0.1, label: "m1", step: 0.1 });
+            pane.addInput(spriteHelper, "m2", { step: 0.01, label: "m2", step: 0.01 });
+            pane.addInput(spriteHelper, "m3", { step: 0.1, label: "m3", step: 0.1 });
+            pane.addInput(spriteHelper, "m4", { step: 0.1, label: "m4", step: 0.1 });
+            pane.addInput(spriteHelper, "m5", { step: 0.01, label: "m5", step: 0.01 });
+            pane.addInput(spriteHelper, "m6", { step: 0.1, label: "m6", step: 10 });
+            pane.addInput(spriteHelper, "m7", { step: 0.1, label: "m7", step: 10 });
+            pane.addInput(spriteHelper, "m8", { step: 0.1, label: "m8", step: 0.1 });
+            pane.addInput(spriteHelper, "m9", { step: 0.1, label: "m9", step: 0.1 });
+            pane.addInput(spriteHelper, "m10", { step: 0.1, label: "m10", step: 0.1 });
+            pane.addInput(spriteHelper, "m11", { step: 0.1, label: "m11", step: 0.1 });
+            pane.addInput(spriteHelper, "m12", { step: 0.01, label: "m12", step: 0.01 });
+            pane.addInput(spriteHelper, "m13", { step: 0.1, label: "m13", step: 0.1 });
+            pane.addInput(spriteHelper, "m14", { step: 0.1, label: "m14", step: 0.1 });
+            pane.addInput(spriteHelper, "m15", { step: 0.01, label: "m15", step: 0.01 });
             return mainPane;
         }
 
