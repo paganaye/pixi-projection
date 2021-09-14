@@ -13,8 +13,8 @@ interface IElevations {
     readonly bottomRight: number
     readonly bottomLeft: number
 }
-let NoElevations: IElevations = { topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 }
-let tempPoint: IPointData = { x: 0, y: 0 };
+const NoElevations: IElevations = { topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 }
+const tempPoint: IPointData = { x: 0, y: 0 };
 
 export class Sprite2d extends Sprite {
     constructor(texture: Texture) {
@@ -77,7 +77,7 @@ export class Sprite2d extends Sprite {
 
         const wt = this.proj.world.mat3;
         const vertexData2d = this.vertexData2d;
-        const vertexData = this.vertexData;
+        // const vertexData = this.vertexData;
         const trim = texture.trim;
         const orig = texture.orig;
         const anchor = this._anchor;
@@ -102,7 +102,7 @@ export class Sprite2d extends Sprite {
             h0 = h1 + orig.height;
         }
 
-        let elevFactor = wt[0]; // I don't really know what to put here. xScale here I believe
+        const elevFactor = wt[0]; // I don't really know what to put here. xScale here I believe
         vertexData2d[0] = (wt[0] * w1) + (wt[3] * h1) + wt[6];
         vertexData2d[1] = (wt[1] * w1) + (wt[4] * h1) + wt[7] - this.elevations.topLeft * elevFactor;
         vertexData2d[2] = (wt[2] * w1) + (wt[5] * h1) + wt[8];
@@ -136,20 +136,20 @@ export class Sprite2d extends Sprite {
 
     containsPoint(point: IPointData): boolean {
         this.worldTransform.applyInverse(point, tempPoint);
-        var x = tempPoint.x / this._texture.orig.width + this.anchor.x;
+        const x = tempPoint.x / this._texture.orig.width + this.anchor.x;
         if (x >= 0 && x < 1) {
-            let texHeight = this._texture.orig.height;
-            let elevFactor = this.proj.world.mat3[0]; // elevFactor doesn't work
-            let texHeight2 = texHeight;
-            let y = tempPoint.y / texHeight + this.anchor.y;
-            let yMin = 0 - (this.elevations.topLeft * (1 - x) + this.elevations.topRight * x) / texHeight2 * elevFactor;
-            let yMax = 1 - (this.elevations.bottomLeft * (1 - x) + this.elevations.bottomRight * x) / texHeight2 * elevFactor;
+            const texHeight = this._texture.orig.height;
+            const elevFactor = this.proj.world.mat3[0]; // elevFactor doesn't work
+            const texHeight2 = texHeight;
+            const y = tempPoint.y / texHeight + this.anchor.y;
+            const yMin = 0 - (this.elevations.topLeft * (1 - x) + this.elevations.topRight * x) / texHeight2 * elevFactor;
+            const yMax = 1 - (this.elevations.bottomLeft * (1 - x) + this.elevations.bottomRight * x) / texHeight2 * elevFactor;
             if (y >= yMin && y < yMax) {
                 return true;
             }
         }
         return false;
-    };
+    }
 
     calculateTrimmedVertices(): void {
         if (this.proj._affine) {
