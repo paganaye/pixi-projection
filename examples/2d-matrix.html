@@ -56,7 +56,7 @@
             app.stage.addChild(root2dContainer);
 
             const main2dContainer = new PIXI.projection.Container2d();
-            main2dContainer.scale.set(4, 4);
+            main2dContainer.scale.set(8, 8);
             main2dContainer.position.set(0, -256)
             root2dContainer.addChild(main2dContainer);
 
@@ -88,6 +88,15 @@
                 }
                 sprite.transform.onChange();
                 tweakPanel.refresh();
+            });
+
+            sprite.on("pointerover",(e)=> {
+                console.log("pointerover");
+                sprite.tint = 0x8080F0;
+            });
+            sprite.on("pointerout",(e)=> {
+                console.log("pointerout");
+                sprite.tint = 0xFFFFFF;
             });
         }
 
@@ -146,7 +155,7 @@
             }
 
             const mainPane = new Tweakpane.Pane();
-            let pane = mainPane.addFolder({ title: "root container axis", expanded: false });
+            let pane = mainPane.addFolder({ title: "root container axis", expanded: true });
             pane.addInput(rootContainerAxisY, "x", { min: -10_000, max: 10_000 });
             pane.addInput(rootContainerAxisY, "y", { min: 0, max: 5_000 });
             pane = mainPane.addFolder({ title: "main container position", expanded: false });
@@ -177,7 +186,7 @@
             pane.addInput(spriteHelper, "m6", { step: 0.1, label: "m6 tx", step: 10 });
             pane.addInput(spriteHelper, "m7", { step: 0.1, label: "m7 ty", step: 10 });
             pane.addInput(spriteHelper, "m8", { step: 0.1, label: "m8 tz", step: 0.1 });
-            pane = mainPane.addFolder({ title: "sprite world matrix 2d" });
+            pane = mainPane.addFolder({ title: "sprite world matrix 2d", expanded: false });
             pane.addInput(spriteHelper, "w0", { step: 0.1, label: "m0 scalex", step: 0.1 });
             pane.addInput(spriteHelper, "w1", { step: 0.1, label: "m1 skewy", step: 0.1 });
             pane.addInput(spriteHelper, "w2", { step: 0.01, label: "m2 rolly", step: 0.01 });

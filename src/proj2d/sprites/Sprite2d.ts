@@ -13,8 +13,26 @@ interface IElevations {
     readonly bottomRight: number
     readonly bottomLeft: number
 }
+
 const NoElevations: IElevations = { topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 }
 const tempPoint: IPointData = { x: 0, y: 0 };
+
+function insidePolygon(point: IPointData, vs: IPointData[]) {
+
+    const x = point.x, y = point.y;
+
+    let inside = false;
+    for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        const xi = vs[i].x, yi = vs[i].y;
+        const xj = vs[j].x, yj = vs[j].y;
+
+        const intersect = ((yi > y) != (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
 
 export class Sprite2d extends Sprite {
     constructor(texture: Texture) {
@@ -26,7 +44,6 @@ export class Sprite2d extends Sprite {
     vertexData2d: Float32Array = null;
     proj: Projection2d;
     _elevations = NoElevations;
-
 
     _calculateBounds(): void {
         this.calculateTrimmedVertices();
@@ -102,21 +119,20 @@ export class Sprite2d extends Sprite {
             h0 = h1 + orig.height;
         }
 
-        const elevFactor = wt[0]; // I don't really know what to put here. xScale here I believe
         vertexData2d[0] = (wt[0] * w1) + (wt[3] * h1) + wt[6];
-        vertexData2d[1] = (wt[1] * w1) + (wt[4] * h1) + wt[7] - this.elevations.topLeft * elevFactor;
+        vertexData2d[1] = (wt[1] * w1) + (wt[4] * h1) + wt[7] - this.elevations.topLeft;
         vertexData2d[2] = (wt[2] * w1) + (wt[5] * h1) + wt[8];
 
         vertexData2d[3] = (wt[0] * w0) + (wt[3] * h1) + wt[6];
-        vertexData2d[4] = (wt[1] * w0) + (wt[4] * h1) + wt[7] - this.elevations.topRight * elevFactor;
+        vertexData2d[4] = (wt[1] * w0) + (wt[4] * h1) + wt[7] - this.elevations.topRight;
         vertexData2d[5] = (wt[2] * w0) + (wt[5] * h1) + wt[8];
 
         vertexData2d[6] = (wt[0] * w0) + (wt[3] * h0) + wt[6];
-        vertexData2d[7] = (wt[1] * w0) + (wt[4] * h0) + wt[7] - this.elevations.bottomRight * elevFactor;
+        vertexData2d[7] = (wt[1] * w0) + (wt[4] * h0) + wt[7] - this.elevations.bottomRight;
         vertexData2d[8] = (wt[2] * w0) + (wt[5] * h0) + wt[8];
 
         vertexData2d[9] = (wt[0] * w1) + (wt[3] * h0) + wt[6];
-        vertexData2d[10] = (wt[1] * w1) + (wt[4] * h0) + wt[7] - this.elevations.bottomLeft * elevFactor;
+        vertexData2d[10] = (wt[1] * w1) + (wt[4] * h0) + wt[7] - this.elevations.bottomLeft;
         vertexData2d[11] = (wt[2] * w1) + (wt[5] * h0) + wt[8];
 
         // This part is totally unused. Am I right?
@@ -134,21 +150,36 @@ export class Sprite2d extends Sprite {
         // vertexData[7] = vertexData2d[10] / vertexData2d[11];
     }
 
+
+
+    cpt = 0;
+
+
     containsPoint(point: IPointData): boolean {
         this.worldTransform.applyInverse(point, tempPoint);
-        const x = tempPoint.x / this._texture.orig.width + this.anchor.x;
-        if (x >= 0 && x < 1) {
-            const texHeight = this._texture.orig.height;
-            const elevFactor = this.proj.world.mat3[0]; // elevFactor doesn't work
-            const texHeight2 = texHeight;
-            const y = tempPoint.y / texHeight + this.anchor.y;
-            const yMin = 0 - (this.elevations.topLeft * (1 - x) + this.elevations.topRight * x) / texHeight2 * elevFactor;
-            const yMax = 1 - (this.elevations.bottomLeft * (1 - x) + this.elevations.bottomRight * x) / texHeight2 * elevFactor;
-            if (y >= yMin && y < yMax) {
-                return true;
+        const vertexData2d = this.vertexData2d;
+        const points2d = [
+            {
+                x: vertexData2d[0] / vertexData2d[2],
+                y: vertexData2d[1] / vertexData2d[2]
+            },
+
+            {
+                x: vertexData2d[3] / vertexData2d[5],
+                y: vertexData2d[4] / vertexData2d[5]
+            },
+
+            {
+                x: vertexData2d[6] / vertexData2d[8],
+                y: vertexData2d[7] / vertexData2d[8]
+            },
+
+            {
+                x: vertexData2d[9] / vertexData2d[11],
+                y: vertexData2d[10] / vertexData2d[11]
             }
-        }
-        return false;
+        ]
+        return insidePolygon(point, points2d);
     }
 
     calculateTrimmedVertices(): void {
