@@ -1,6 +1,6 @@
 /* eslint-disable no-mixed-operators */
 import { Sprite } from '@pixi/sprite';
-import { Texture } from '@pixi/core';
+import { Renderer, Texture } from '@pixi/core';
 import { Projection2d } from '../Projection2d';
 import { IPointData, Matrix, Point } from '@pixi/math';
 import { DisplayObject } from '@pixi/display';
@@ -15,24 +15,6 @@ interface IElevations {
 }
 
 const NoElevations: IElevations = { topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0 }
-const tempPoint: IPointData = { x: 0, y: 0 };
-
-function insidePolygon(point: IPointData, vs: IPointData[]) {
-
-    const x = point.x, y = point.y;
-
-    let inside = false;
-    for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-        const xi = vs[i].x, yi = vs[i].y;
-        const xj = vs[j].x, yj = vs[j].y;
-
-        const intersect = ((yi > y) != (yj > y))
-            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-        if (intersect) inside = !inside;
-    }
-    return inside;
-}
-
 
 export class Sprite2d extends Sprite {
     constructor(texture: Texture) {
@@ -94,7 +76,7 @@ export class Sprite2d extends Sprite {
 
         const wt = this.proj.world.mat3;
         const vertexData2d = this.vertexData2d;
-        // const vertexData = this.vertexData;
+        const vertexData = this.vertexData;
         const trim = texture.trim;
         const orig = texture.orig;
         const anchor = this._anchor;
@@ -135,57 +117,67 @@ export class Sprite2d extends Sprite {
         vertexData2d[10] = (wt[1] * w1) + (wt[4] * h0) + wt[7] - this.elevations.bottomLeft;
         vertexData2d[11] = (wt[2] * w1) + (wt[5] * h0) + wt[8];
 
-        // This part is totally unused. Am I right?
+        const rightDiagonal = Math.abs(this.elevations.topRight - this.elevations.bottomLeft)
+            <= Math.abs(this.elevations.topLeft - this.elevations.bottomRight);
+        if (!rightDiagonal) {
+            const tempX = vertexData2d[0];
+            const tempY = vertexData2d[1];
+            const tempZ = vertexData2d[2];
+            vertexData2d[0] = vertexData2d[3];
+            vertexData2d[1] = vertexData2d[4];
+            vertexData2d[2] = vertexData2d[5];
+            vertexData2d[3] = vertexData2d[6];
+            vertexData2d[4] = vertexData2d[7];
+            vertexData2d[5] = vertexData2d[8];
+            vertexData2d[6] = vertexData2d[9];
+            vertexData2d[7] = vertexData2d[10];
+            vertexData2d[8] = vertexData2d[11];
+            vertexData2d[9] = tempX;
+            vertexData2d[10] = tempY;
+            vertexData2d[11] = tempZ;
+            this.rotation = - Math.PI / 2;
+        } else {
+            this.rotation = 0;
+        }
 
-        // vertexData[0] = vertexData2d[0] / vertexData2d[2];
-        // vertexData[1] = vertexData2d[1] / vertexData2d[2];
+        vertexData[0] = vertexData2d[0] / vertexData2d[2];
+        vertexData[1] = vertexData2d[1] / vertexData2d[2];
 
-        // vertexData[2] = vertexData2d[3] / vertexData2d[5];
-        // vertexData[3] = vertexData2d[4] / vertexData2d[5];
+        vertexData[2] = vertexData2d[3] / vertexData2d[5];
+        vertexData[3] = vertexData2d[4] / vertexData2d[5];
 
-        // vertexData[4] = vertexData2d[6] / vertexData2d[8];
-        // vertexData[5] = vertexData2d[7] / vertexData2d[8];
+        vertexData[4] = vertexData2d[6] / vertexData2d[8];
+        vertexData[5] = vertexData2d[7] / vertexData2d[8];
 
-        // vertexData[6] = vertexData2d[9] / vertexData2d[11];
-        // vertexData[7] = vertexData2d[10] / vertexData2d[11];
+        vertexData[6] = vertexData2d[9] / vertexData2d[11];
+        vertexData[7] = vertexData2d[10] / vertexData2d[11];
+
     }
 
-
+    render(renderer: Renderer) {
+        super.render(renderer)
+    }
 
     cpt = 0;
 
 
     containsPoint(point: IPointData): boolean {
-        this.worldTransform.applyInverse(point, tempPoint);
-        const vertexData2d = this.vertexData2d;
-        const points2d = [
-            {
-                x: vertexData2d[0] / vertexData2d[2],
-                y: vertexData2d[1] / vertexData2d[2]
-            },
-
-            {
-                x: vertexData2d[3] / vertexData2d[5],
-                y: vertexData2d[4] / vertexData2d[5]
-            },
-
-            {
-                x: vertexData2d[6] / vertexData2d[8],
-                y: vertexData2d[7] / vertexData2d[8]
-            },
-
-            {
-                x: vertexData2d[9] / vertexData2d[11],
-                y: vertexData2d[10] / vertexData2d[11]
-            }
-        ]
-        return insidePolygon(point, points2d);
+        const vs = this.vertexData;
+        const { x, y } = point;
+        let inside = false;
+        for (let i = 0, j = 3; i < 4; j = i++) {
+            const xi = vs[i * 2], yi = vs[i * 2 + 1];
+            const xj = vs[j * 2], yj = vs[j * 2 + 1];
+            const intersect = ((yi > y) != (yj > y))
+                && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
     }
 
     calculateTrimmedVertices(): void {
         if (this.proj._affine) {
             super.calculateTrimmedVertices();
-
             return;
         }
 
